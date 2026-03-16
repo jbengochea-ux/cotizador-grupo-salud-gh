@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cotizador — Grupo Salud</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <style>
@@ -170,7 +169,7 @@ select.form-input option{background:var(--surface);}
 </head>
 <body>
 <div class="loading-bar" id="loadingBar"></div>
-<div class="toast" id="toast"></div>
+<div class="toast success" id="toast">Precios Mar 2026 cargados</div>
 
 <div class="app">
 <nav class="sidebar">
@@ -179,24 +178,24 @@ select.form-input option{background:var(--surface);}
     <div class="logo-sub">Cotizador Pro</div>
   </div>
   <div class="nav-section">Flujo</div>
-  <div class="nav-item active" onclick="goTo('nomina',this)"><span class="nav-icon">📋</span> Nómina</div>
+  <div class="nav-item" onclick="goTo('nomina',this)"><span class="nav-icon">📋</span> Nómina</div>
   <div class="nav-item" onclick="goTo('configurar',this)"><span class="nav-icon">⚙️</span> Configurar Cotización</div>
   <div class="nav-item" onclick="goTo('cotizacion',this)"><span class="nav-icon">💰</span> Resultados</div>
   <div class="nav-item" onclick="goTo('exportar',this)"><span class="nav-icon">🚀</span> Exportar a Gamma</div>
   <div class="nav-section">Precios</div>
-  <div class="nav-item" onclick="goTo('precios',this)"><span class="nav-icon">📄</span> Cargar PDFs</div>
+  <div class="nav-item active" onclick="goTo('precios',this)"><span class="nav-icon">📄</span> Cargar PDFs</div>
   <div class="nav-item" onclick="goTo('plantilla',this)"><span class="nav-icon">📥</span> Plantilla Nómina</div>
   <div class="sidebar-bottom">
     <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--success)">
       <div class="pulse-dot"></div>
-      <span id="preciosBadge">Precios: Feb 2026</span>
+      <span id="preciosBadge">Precios: Mar 2026</span>
     </div>
   </div>
 </nav>
 
 <main class="main">
   <div class="topbar">
-    <div class="page-title" id="pageTitle">Cargar Nómina</div>
+    <div class="page-title" id="pageTitle">Cargar PDFs de Precios</div>
     <div class="topbar-actions">
       <button class="btn btn-ghost" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" style="font-size:16px;padding:8px 12px;">🌙</button>
       <button class="btn btn-ghost" onclick="openModal('addEmp')">+ Empleado</button>
@@ -207,7 +206,7 @@ select.form-input option{background:var(--surface);}
   <div class="content">
 
     <!-- ══ NOMINA ══ -->
-    <div class="page active" id="page-nomina">
+    <div class="page" id="page-nomina">
       <div class="stats-row">
         <div class="stat-card"><div class="stat-label">Empleados</div><div class="stat-value stat-accent" id="st-emp">0</div><div class="stat-sub">en nómina</div></div>
         <div class="stat-card"><div class="stat-label">Grupo Familiar</div><div class="stat-value stat-green" id="st-fam">0</div><div class="stat-sub">personas totales</div></div>
@@ -386,7 +385,7 @@ select.form-input option{background:var(--surface);}
     </div>
 
     <!-- ══ PRECIOS PDF ══ -->
-    <div class="page" id="page-precios">
+    <div class="page active" id="page-precios">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title"><div class="icon icon-yellow">📄</div>Cargar Tablas de Precios PDF</div>
@@ -440,7 +439,7 @@ select.form-input option{background:var(--surface);}
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
           <button class="btn btn-primary" onclick="applyLoadedPrices()">💾 Aplicar precios cargados</button>
           <button class="btn btn-warning" onclick="restaurarPrecios()">↩ Restaurar precios</button>
-          <button class="btn btn-success" onclick="guardarCotizadorHTML()" style="margin-left:8px">💾 Guardar precios en este navegador</button>
+          <button class="btn btn-success" onclick="guardarCotizadorHTML()" style="margin-left:8px">⬇️ Descargar cotizador actualizado</button>
           <span id="pdfStatus" style="font-size:12px;color:var(--muted)"></span>
         </div>
       </div>
@@ -468,7 +467,40 @@ select.form-input option{background:var(--surface);}
           <button class="btn" style="font-size:11px;padding:6px 12px;background:var(--surface2);border-color:var(--warning);color:var(--warning)" onclick="showManualTab('osde',this)">🔵 OSDE</button>
         </div>
 
-        <div id="manualTabContent"></div>
+        <div id="manualTabContent"><div class="manual-grid"><div class="manual-field">
+      <label>Plan 4135</label>
+      <input type="text" id="mpmed_corp_directo_4135" placeholder="ej: 174.448,55" value="174.449" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 4136</label>
+      <input type="text" id="mpmed_corp_directo_4136" placeholder="ej: 174.448,55" value="176.057" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 4137</label>
+      <input type="text" id="mpmed_corp_directo_4137" placeholder="ej: 174.448,55" value="188.074" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 4138</label>
+      <input type="text" id="mpmed_corp_directo_4138" placeholder="ej: 174.448,55" value="207.485" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 4225</label>
+      <input type="text" id="mpmed_corp_directo_4225" placeholder="ej: 174.448,55" value="231.547" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 4404/28</label>
+      <input type="text" id="mpmed_corp_directo_4404_28" placeholder="ej: 174.448,55" value="309.765" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 4502/116</label>
+      <input type="text" id="mpmed_corp_directo_4502_116" placeholder="ej: 174.448,55" value="406.369" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div></div><div class="manual-section-title">Odontología</div><div class="manual-grid"><div class="manual-field">
+      <label>Plan 19 AA</label>
+      <input type="text" id="mpodo_corp_directo_19" placeholder="ej: 12.347,28" value="12.347" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 20 AB</label>
+      <input type="text" id="mpodo_corp_directo_20" placeholder="ej: 12.347,28" value="17.369" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 21 BA</label>
+      <input type="text" id="mpodo_corp_directo_21" placeholder="ej: 12.347,28" value="18.743" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div><div class="manual-field">
+      <label>Plan 22 BB</label>
+      <input type="text" id="mpodo_corp_directo_22" placeholder="ej: 12.347,28" value="32.328" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+    </div></div></div>
 
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
           <button class="btn btn-primary" onclick="applyManualPrices()">💾 Aplicar precios manuales</button>
@@ -480,7 +512,306 @@ select.form-input option{background:var(--surface);}
         <div class="panel-header">
           <div class="panel-title"><div class="icon icon-cyan">📊</div>Precios Activos</div>
         </div>
-        <div id="preciosActivos" style="font-size:12px;color:var(--muted)">Cargando...</div>
+        <div id="preciosActivos" style="font-size:12px;color:var(--muted)"><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Directo</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$174.449</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$176.057</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$188.074</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$207.485</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$231.547</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$309.765</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$406.369</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Corporativo</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4125</div>
+            <div class="price-chip-val">$146.808</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4126</div>
+            <div class="price-chip-val">$148.284</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4127</div>
+            <div class="price-chip-val">$159.302</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4128</div>
+            <div class="price-chip-val">$177.087</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4215</div>
+            <div class="price-chip-val">$198.980</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4405/28</div>
+            <div class="price-chip-val">$273.842</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4501/116</div>
+            <div class="price-chip-val">$375.131</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Adh. I y III</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$182.374</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$183.791</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$196.612</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$216.986</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$242.070</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$327.135</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$429.126</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Adh. II</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$320.031</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$358.068</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$428.435</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$578.061</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$674.417</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Jubilables</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$446.005</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$459.927</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$492.005</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$542.818</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$605.768</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$884.085</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$1.159.919</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Bajas Futuras</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$302.316</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$311.749</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$333.507</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$367.928</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$410.597</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$549.299</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$720.603</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Corporativo Mayores de 65</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4125</div>
+            <div class="price-chip-val">$194.153</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4126</div>
+            <div class="price-chip-val">$196.106</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4127</div>
+            <div class="price-chip-val">$210.677</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4128</div>
+            <div class="price-chip-val">$234.198</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$230.708</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$232.835</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$248.728</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$274.399</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4215</div>
+            <div class="price-chip-val">$263.151</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$306.221</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$409.664</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$537.423</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4405/28</div>
+            <div class="price-chip-val">$362.155</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4501/116</div>
+            <div class="price-chip-val">$496.111</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">+65 Jubilables Empresa y Adh IV</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$394.049</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$406.347</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$434.693</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$479.587</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$535.193</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$723.267</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$948.811</div>
+          </div>
+      </div>
+    </div><div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"><div style="font-size:11px;color:var(--warning);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600">🔵 OSDE — Individual (titular)</div><div class="price-table-grid"><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 210</div>
+      <div class="price-chip-val" style="color:var(--warning)">$299.661</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 310</div>
+      <div class="price-chip-val" style="color:var(--warning)">$388.642</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 410</div>
+      <div class="price-chip-val" style="color:var(--warning)">$531.549</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 450</div>
+      <div class="price-chip-val" style="color:var(--warning)">$869.543</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 510</div>
+      <div class="price-chip-val" style="color:var(--warning)">$1.379.571</div>
+    </div></div></div></div>
       </div>
     </div>
 
@@ -627,10 +958,29 @@ function restaurarPrecios() {
   showToast('✓ Precios restaurados (' + preciosMes + ')','success');
 }
 function guardarCotizadorHTML() {
-  // Los precios ya se guardan automáticamente en localStorage al aplicarlos.
-  // Esta función guarda una copia manual adicional por si acaso.
-  savePreciosLocalStorage();
-  showToast('✓ Precios guardados en este navegador', 'success');
+  try {
+    const data = {
+      PRECIOS, PRECIOS_ODO, PRECIOS_BAJAS_EDAD, PRECIOS_BAJAS_ODO_EDAD, PRECIOS_OSDE, preciosMes
+    };
+    // Escribir precios en el tag JSON del DOM
+    const tag = document.getElementById('gs-precios-data');
+    if (tag) tag.textContent = JSON.stringify(data);
+
+    // Serializar el HTML completo — el tag JSON no se corrompe porque no es <script type="text/javascript">
+    const htmlStr = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+    const blob = new Blob([htmlStr], {type: 'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showToast('✓ Descargado — subilo a GitHub Pages para compartir', 'success');
+  } catch(e) {
+    showToast('⚠ Error: ' + e.message, 'warn');
+  }
 }
 
 function savePreciosLocalStorage() {
@@ -783,13 +1133,30 @@ function loadDefaultPrices() {
 }
 
 loadDefaultPrices();
-// Cargar precios guardados en localStorage (si existen)
+// Cargar precios del tag JSON embebido (tienen prioridad — vienen del último guardado)
+(function() {
+  try {
+    const tag = document.getElementById('gs-precios-data');
+    if (!tag) return;
+    const raw = tag.textContent.trim();
+    if (!raw || raw === '{}') return;
+    const data = JSON.parse(raw);
+    if (data.PRECIOS)                PRECIOS                = data.PRECIOS;
+    if (data.PRECIOS_ODO)            PRECIOS_ODO            = data.PRECIOS_ODO;
+    if (data.PRECIOS_BAJAS_EDAD)     PRECIOS_BAJAS_EDAD     = data.PRECIOS_BAJAS_EDAD;
+    if (data.PRECIOS_BAJAS_ODO_EDAD) PRECIOS_BAJAS_ODO_EDAD = data.PRECIOS_BAJAS_ODO_EDAD;
+    if (data.PRECIOS_OSDE)           PRECIOS_OSDE           = data.PRECIOS_OSDE;
+    if (data.preciosMes)             preciosMes             = data.preciosMes;
+    document.getElementById('preciosBadge').textContent = 'Precios: ' + preciosMes;
+  } catch(e) { console.warn('Error cargando precios embebidos:', e); }
+})();
+// También cargar localStorage como fallback
 if (loadPreciosLocalStorage()) {
   document.getElementById('preciosBadge').textContent = 'Precios: ' + preciosMes;
-  renderPreciosActivos();
 }
 document.addEventListener('DOMContentLoaded', () => {
   renderManualTab('corp_directo');
+  renderPreciosActivos();
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -2852,5 +3219,6 @@ function addEmployee(){
 // Init
 renderPreciosActivos();
 </script>
-</body>
-</html>
+<script type="application/json" id="gs-precios-data">{"PRECIOS":{"corp_directo":{"4135":174448.55,"4136":176056.54,"4137":188074.2,"4138":207485.19,"4225":231547.2,"4404_28":309764.72,"4502_116":406369.23},"corp_obligatorio":{"4125":146807.64,"4126":148284.27,"4127":159302.15,"4128":177087.14,"4215":198979.92,"4405_28":273841.57,"4501_116":375131.07},"adh_i_iii":{"4135":182374.43,"4136":183791,"4137":196612.42,"4138":216986.04,"4225":242069.68,"4404_28":327135.44,"4502_116":429125.79},"adh_ii":{"4135":320030.97,"4136":358067.86,"4137":428435.49,"4138":578060.85,"4225":674417.35},"jubilables":{"4135":446004.98,"4136":459927.33,"4137":492005.11,"4138":542818.29,"4225":605768.19,"4404_28":884085.04,"4502_116":1159918.54},"bajas_futuras":{"4135":302315.62,"4136":311748.96,"4137":333507.26,"4138":367927.5,"4225":410597.34,"4404_28":549298.95,"4502_116":720603.37},"mayores_65":{"4125":194153.09,"4126":196105.95,"4127":210677.1,"4128":234197.74,"4135":230708.21,"4136":232834.77,"4137":248728.12,"4138":274399.16,"4215":263150.95,"4225":306221.17,"4404_28":409663.84,"4502_116":537423.31,"4405_28":362155.48,"4501_116":496110.84},"jubilables_65":{"4135":394049.26,"4136":406346.57,"4137":434693.38,"4138":479586.68,"4225":535193.28,"4404_28":723267.49,"4502_116":948811.24}},"PRECIOS_ODO":{"corp_directo":{"19":12347.28,"20":17369.32,"21":18743.37,"22":32328.08},"corp_obligatorio":{"19":12347.28,"20":17369.32,"21":18743.37,"22":32328.08},"adh_i_iii":{"19":14199.18,"20":20108.38,"21":21548.87,"22":37174.72},"adh_ii":{"19":10333.74,"20":20106.25,"21":21546.74,"22":37173.66},"jubilables":{"19":26800.27,"20":40440.46,"21":43647.15,"22":75279.12},"bajas_futuras":{"19":11485.64,"20":16157.4,"21":17436.3,"22":30085.41},"mayores_65":{"19":16329.28,"20":22970.93,"21":24788.11,"22":42753.89},"jubilables_65":{"19":17468.72,"20":24573.89,"21":26517.76,"22":45736.86}},"PRECIOS_BAJAS_EDAD":{"4135":{"m55":347662.96,"m65":399812.4},"4136":{"m55":358511.3,"m65":412288},"4137":{"m55":383533.34,"m65":441063.35},"4138":{"m55":423116.63,"m65":486584.13},"4225":{"m55":472186.95,"m65":543014.99},"4404_28":{"m55":631693.79,"m65":726447.86},"4502_116":{"m55":828693.87,"m65":952997.95}},"PRECIOS_BAJAS_ODO_EDAD":{"19":{"m55":13208.49,"m65":15189.76},"20":{"m55":18581.01,"m65":21368.16},"21":{"m55":20051.74,"m65":23059.5},"22":{"m55":34598.22,"m65":39787.95}},"PRECIOS_OSDE":{"210":{"individual":299661.2,"matrimonio":528423.39,"hijo":96559.66,"hijos_add":43571.62,"neo":{"individual":145458.01,"matrimonio":290916.04,"hijo":96559.66,"hijos":43571.62,"acargo":394712.9},"joven":{"individual":218230.11,"matrimonio":436460.23,"hijo":96559.66,"hijos":43571.62,"acargo":394712.9},"mayor":{"individual":299661.2,"matrimonio":528423.39,"hijo":96559.66,"hijos":43571.62,"acargo":394712.9},"jubilado":null,"fecha":"12/1969"},"310":{"individual":388642.42,"matrimonio":687778.69,"hijo":128143.4,"hijos_add":50443.72,"neo":{"individual":190730.38,"matrimonio":381460.79,"hijo":128143.4,"hijos":50443.72,"acargo":511289.08},"joven":{"individual":285049.63,"matrimonio":570099.3,"hijo":128143.4,"hijos":50443.72,"acargo":511289.08},"mayor":{"individual":388642.42,"matrimonio":687778.69,"hijo":128143.4,"hijos":50443.72,"acargo":511289.08},"jubilado":null,"fecha":"12/1969"},"410":{"individual":531549.36,"matrimonio":882918.53,"hijo":166937.12,"hijos_add":66410.2,"neo":{"individual":253970.45,"matrimonio":507940.93,"hijo":166937.12,"hijos":66410.2,"acargo":699186.07},"joven":{"individual":377349.54,"matrimonio":754699.14,"hijo":166937.12,"hijos":66410.2,"acargo":699186.07},"mayor":{"individual":531549.36,"matrimonio":882918.53,"hijo":166937.12,"hijos":66410.2,"acargo":699186.07},"jubilado":null,"fecha":"12/1969"},"450":{"individual":869542.85,"matrimonio":1365002.66,"hijo":224611.27,"hijos_add":129538,"neo":{"individual":384379.26,"matrimonio":768758.53,"hijo":224611.27,"hijos":129538,"acargo":907607.5},"joven":{"individual":574753.65,"matrimonio":1149507.32,"hijo":224611.27,"hijos":129538,"acargo":907607.5},"mayor":{"individual":869542.85,"matrimonio":1365002.66,"hijo":224611.27,"hijos":129538,"acargo":907607.5},"jubilado":null,"fecha":"12/1969"},"510":{"individual":1379571.15,"matrimonio":2253717.33,"hijo":392599.46,"hijos_add":196629.66,"neo":{"individual":628959.4,"matrimonio":1257918.84,"hijo":392599.46,"hijos":196629.66,"acargo":1416505.39},"joven":{"individual":952129.31,"matrimonio":1904258.63,"hijo":392599.46,"hijos":196629.66,"acargo":1416505.39},"mayor":{"individual":1379571.15,"matrimonio":2253717.33,"hijo":392599.46,"hijos":196629.66,"acargo":1416505.39},"jubilado":null,"fecha":"12/1969"}},"preciosMes":"Mar 2026"}</script>
+
+</body></html>
