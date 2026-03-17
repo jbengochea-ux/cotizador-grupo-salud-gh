@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script>
+    (function () {
+      // Fuerza recarga cuando GitHub Pages sirve una versión más nueva del archivo.
+      // Compara el ETag/Last-Modified de esta página con el del servidor.
+      // Si difieren, recarga una sola vez para obtener la versión fresca.
+      var RELOAD_KEY = 'ghp_etag_' + location.pathname;
+      fetch(location.href, { method: 'HEAD', cache: 'no-store' })
+        .then(function (res) {
+          var tag = res.headers.get('etag') || res.headers.get('last-modified') || '';
+          var prev = sessionStorage.getItem(RELOAD_KEY);
+          if (tag && prev && prev !== tag) {
+            sessionStorage.setItem(RELOAD_KEY, tag);
+            location.reload(true);
+          } else if (tag) {
+            sessionStorage.setItem(RELOAD_KEY, tag);
+          }
+        })
+        .catch(function () { /* sin red: no hacer nada */ });
+    })();
+  </script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizador — Grupo Salud</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;
+  --accent:#00c2ff;--accent2:#0066ff;--success:#00e5a0;--warning:#ffb800;
+  --danger:#ff4757;--text:#e8edf5;--muted:#5a6a82;--card:#131e30;--gold:#ffb800;
+}
+.theme-light{
+  --bg:#f0f4f8;--surface:#ffffff;--surface2:#eef2f7;--border:#d0dbe8;
+  --accent:#1a7bbf;--accent2:#0d5a8a;--success:#00966d;--warning:#e09400;
+  --danger:#d93025;--text:#1a2535;--muted:#6b7f96;--card:#ffffff;--gold:#f0a500;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{transition:background 0.3s,color 0.3s;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,194,255,0.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,194,255,0.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;display:flex;height:100vh;}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;padding:24px 0;}
+.logo{padding:0 24px 32px;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.logo-mark{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);letter-spacing:-0.5px;}
+.logo-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 24px;cursor:pointer;font-size:14px;color:var(--muted);transition:all 0.2s;border-left:3px solid transparent;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.03);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,194,255,0.06);font-weight:500;}
+.nav-icon{font-size:18px;width:20px;text-align:center;}
+.nav-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:16px 24px 8px;opacity:0.5;}
+.sidebar-bottom{margin-top:auto;padding:16px 24px;border-top:1px solid var(--border);}
+.pulse-dot{width:8px;height:8px;background:var(--success);border-radius:50%;animation:pulse 2s infinite;display:inline-block;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.topbar{padding:18px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(10,15,30,0.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10;}
+.page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.5px;color:var(--text);}
+.topbar-actions{display:flex;gap:10px;}
+.btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:white;box-shadow:0 4px 15px rgba(0,194,255,0.2);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,194,255,0.3);}
+.btn-success{background:linear-gradient(135deg,#00a87a,var(--success));color:#001a11;font-weight:600;box-shadow:0 4px 15px rgba(0,229,160,0.2);}
+.btn-success:hover{transform:translateY(-1px);}
+.btn-warning{background:linear-gradient(135deg,#cc8800,var(--warning));color:#1a0e00;font-weight:600;}
+.content{padding:32px 36px;flex:1;}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;transition:border-color 0.2s;margin-bottom:20px;}
+.panel:hover{border-color:rgba(0,194,255,0.2);}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.panel-title{font-family:'Syne',sans-serif;font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;}
+.icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.icon-blue{background:rgba(0,102,255,0.15);}
+.icon-cyan{background:rgba(0,194,255,0.12);}
+.icon-green{background:rgba(0,229,160,0.12);}
+.icon-yellow{background:rgba(255,184,0,0.12);}
+.icon-purple{background:rgba(180,100,255,0.12);}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.2s;}
+.stat-card:hover{border-color:rgba(0,194,255,0.25);transform:translateY(-2px);}
+.stat-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-family:'Syne',sans-serif;font-weight:700;font-size:26px;line-height:1;margin-bottom:4px;}
+.stat-sub{font-size:12px;color:var(--muted);}
+.stat-accent{color:var(--accent);}
+.stat-green{color:var(--success);}
+.stat-yellow{color:var(--warning);}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.3s;background:rgba(0,194,255,0.02);}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(0,194,255,0.06);}
+.upload-icon{font-size:36px;margin-bottom:10px;}
+.upload-title{font-family:'Syne',sans-serif;font-weight:600;font-size:15px;margin-bottom:4px;}
+.upload-sub{font-size:12px;color:var(--muted);}
+.upload-hint{display:inline-block;margin-top:10px;padding:3px 10px;background:rgba(0,194,255,0.1);border:1px solid rgba(0,194,255,0.2);border-radius:20px;font-size:11px;color:var(--accent);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{text-align:left;padding:10px 14px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;}
+tbody tr{border-bottom:1px solid rgba(30,45,69,0.5);transition:background 0.15s;}
+tbody tr:hover{background:rgba(0,194,255,0.03);}
+tbody td{padding:11px 14px;}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-blue{background:rgba(0,102,255,0.15);color:#5599ff;}
+.badge-green{background:rgba(0,229,160,0.12);color:var(--success);}
+.badge-yellow{background:rgba(255,184,0,0.12);color:var(--warning);}
+.badge-red{background:rgba(255,71,87,0.12);color:var(--danger);}
+.badge-purple{background:rgba(180,100,255,0.12);color:#b47aff;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;color:var(--muted);margin-bottom:5px;display:block;letter-spacing:0.5px;}
+.form-input{width:100%;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;transition:border-color 0.2s;outline:none;}
+.form-input:focus{border-color:var(--accent);}
+select.form-input option{background:var(--surface);}
+.tabs{display:flex;gap:4px;margin-bottom:20px;padding:4px;background:var(--surface);border-radius:10px;width:fit-content;}
+.tab{padding:7px 18px;border-radius:7px;font-size:13px;cursor:pointer;transition:all 0.2s;color:var(--muted);font-weight:500;}
+.tab.active{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(0,194,255,0.08);border:1px solid rgba(0,194,255,0.15);border-radius:6px;font-size:11px;color:var(--accent);}
+.result-total{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:rgba(0,194,255,0.06);border:1px solid rgba(0,194,255,0.2);border-radius:12px;margin-top:16px;}
+.total-value{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--accent);}
+.loading-bar{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--accent2),var(--accent));z-index:999;transition:width 0.3s;box-shadow:0 0 10px var(--accent);}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:13px;z-index:999;transform:translateY(100px);opacity:0;transition:all 0.3s;display:flex;align-items:center;gap:8px;max-width:380px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-color:rgba(0,229,160,0.3);color:var(--success);}
+.toast.info{border-color:rgba(0,194,255,0.3);color:var(--accent);}
+.toast.warn{border-color:rgba(255,184,0,0.3);color:var(--warning);}
+.page{display:none;}
+.page.active{display:block;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.4;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:560px;width:90%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
+.price-table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px;}
+.price-chip{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;}
+.price-chip-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.price-chip-val{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--accent);margin-top:3px;}
+.pdf-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.manual-field{display:flex;flex-direction:column;gap:4px;}
+.manual-field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.manual-field input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;outline:none;transition:border 0.2s;}
+.manual-field input:focus{border-color:var(--accent);}
+.manual-field input.filled{border-color:var(--success);}
+.manual-section-title{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:16px 0 10px;}
+.pdf-slot{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.pdf-slot:hover{border-color:var(--accent);background:rgba(0,194,255,0.04);}
+.pdf-slot.loaded{border-color:var(--success);background:rgba(0,229,160,0.04);}
+.pdf-slot-icon{font-size:24px;margin-bottom:6px;}
+.pdf-slot-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.pdf-slot-desc{font-size:11px;color:var(--muted);}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.sep{height:1px;background:var(--border);margin:20px 0;}
+.combo-selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.combo-chip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all 0.2s;color:var(--muted);}
+.combo-chip:hover{border-color:var(--accent);color:var(--accent);}
+.combo-chip.selected{background:rgba(0,194,255,0.12);border-color:var(--accent);color:var(--accent);font-weight:600;}
+.gamma-preview{background:linear-gradient(135deg,#1a0533,#0d1f3c);border-radius:16px;padding:40px;text-align:center;border:1px solid rgba(180,100,255,0.2);position:relative;overflow:hidden;}
+.gamma-logo{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;background:linear-gradient(135deg,#b47aff,#ff7adb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
+.gamma-slides{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;}
+.slide-thumb{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;text-align:left;}
+.slide-num{font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:4px;}
+.slide-title-sm{font-size:11px;font-weight:600;color:rgba(255,255,255,0.7);line-height:1.3;}
+
+/* ── TEMA CLARO: overrides específicos ── */
+.theme-light .sidebar{background:#0d5a8a;border-right:none;}
+.theme-light .logo{border-bottom-color:rgba(255,255,255,0.15);}
+.theme-light .sidebar-bottom{border-top-color:rgba(255,255,255,0.15);}
+.theme-light .nav-section{color:rgba(255,255,255,0.45);}
+.theme-light .nav-item{color:rgba(255,255,255,0.65);}
+.theme-light .nav-item:hover{color:#fff;background:rgba(255,255,255,0.1);}
+.theme-light .nav-item.active{color:#fff;border-left-color:var(--gold);background:rgba(255,255,255,0.15);}
+.theme-light .topbar{background:rgba(255,255,255,0.95);box-shadow:0 1px 6px rgba(0,0,0,0.06);}
+.theme-light .page-title{color:var(--text);}
+.theme-light .panel-title{color:var(--text);}
+.theme-light .modal-title{color:var(--text);}
+.theme-light .upload-title{color:var(--text);}
+.theme-light .pdf-slot-name{color:var(--text);}
+.theme-light .tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(26,123,191,0.3);}
+.theme-light .form-input:focus{background:#fff;}
+.theme-light .manual-field input:focus{background:#fff;}
+.theme-light .toast{background:#fff;}
+.theme-light .toast.success{background:#f0faf6;}
+.theme-light .toast.info{background:#f0f7fd;}
+.theme-light .toast.warn{background:#fdf8ed;}
+.theme-light tbody tr{border-bottom-color:var(--border);}
+.theme-light #themeToggle{font-size:16px;}
+.theme-light .sidebar-bottom div{color:rgba(255,255,255,0.7) !important;}
+</style>
+</head>
+<body>
+<div class="loading-bar" id="loadingBar"></div>
+<div class="toast success" id="toast">✓ Precios OSDE actualizados desde Excel</div>
+
+<div class="app">
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">GrupoSalud</div>
+    <div class="logo-sub">Cotizador Pro</div>
+  </div>
+  <div class="nav-section">Flujo</div>
+  <div class="nav-item" onclick="goTo('nomina',this)"><span class="nav-icon">📋</span> Nómina</div>
+  <div class="nav-item" onclick="goTo('configurar',this)"><span class="nav-icon">⚙️</span> Configurar Cotización</div>
+  <div class="nav-item" onclick="goTo('cotizacion',this)"><span class="nav-icon">💰</span> Resultados</div>
+  <div class="nav-item" onclick="goTo('exportar',this)"><span class="nav-icon">🚀</span> Exportar a Gamma</div>
+  <div class="nav-section">Precios</div>
+  <div class="nav-item active" onclick="goTo('precios',this)"><span class="nav-icon">📄</span> Cargar PDFs</div>
+  <div class="nav-item" onclick="goTo('plantilla',this)"><span class="nav-icon">📥</span> Plantilla Nómina</div>
+  <div class="sidebar-bottom">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--success)">
+      <div class="pulse-dot"></div>
+      <span id="preciosBadge">Precios: Mar 2026</span>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Cargar PDFs de Precios</div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" style="font-size:16px;padding:8px 12px;">🌙</button>
+      <button class="btn btn-ghost" onclick="openModal('addEmp')">+ Empleado</button>
+      <button class="btn btn-primary" onclick="guardarGruposYCotizar()">⚡ Cotizar Todo</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ NOMINA ══ -->
+    <div class="page" id="page-nomina">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Empleados</div><div class="stat-value stat-accent" id="st-emp">0</div><div class="stat-sub">en nómina</div></div>
+        <div class="stat-card"><div class="stat-label">Grupo Familiar</div><div class="stat-value stat-green" id="st-fam">0</div><div class="stat-sub">personas totales</div></div>
+        <div class="stat-card"><div class="stat-label">Edad Promedio</div><div class="stat-value stat-yellow" id="st-edad">—</div><div class="stat-sub">titulares</div></div>
+        <div class="stat-card"><div class="stat-label">Empresa</div><div class="stat-value" id="st-empresa" style="font-size:16px">—</div><div class="stat-sub">cliente</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-blue">📁</div>Importar Excel de Nómina</div>
+          <div class="tag">📄 .xlsx / .csv</div>
+        </div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <div class="upload-icon" id="uploadIcon">📊</div>
+          <div class="upload-title" id="uploadTitle">Arrastrá tu Excel de nómina aquí</div>
+          <div class="upload-sub" id="uploadSub">o hacé click para seleccionar el archivo</div>
+          <div class="upload-hint">Acepta .xlsx · .xls · .csv — Detecta encabezados automáticamente</div>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this)">
+        <div id="mappingPanel" style="display:none;margin-top:20px">
+          <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(255,184,0,0.12);color:var(--warning);padding:4px 10px;border-radius:6px;font-size:12px">Paso 1</span>
+            Mapear columnas detectadas
+          </div>
+          <div id="mappingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px"></div>
+          <div style="background:rgba(0,194,255,0.05);border:1px solid rgba(0,194,255,0.12);border-radius:10px;padding:14px;margin-bottom:14px">
+            <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px">📋 Vista previa — primeras 3 filas</div>
+            <div id="previewTable" style="overflow-x:auto"></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn btn-primary" onclick="confirmMapping()">✓ Confirmar e Importar</button>
+            <button class="btn btn-ghost" onclick="cancelMapping()">✕ Cancelar</button>
+            <span id="mappingStatus" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+        </div>
+        <div style="text-align:center;padding:14px 0;color:var(--muted);font-size:13px">— o usá datos de ejemplo —</div>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="loadSampleData()">📥 Cargar 10 empleados de ejemplo</button>
+      </div>
+
+      <div class="panel" id="nominaTablePanel" style="display:none">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-cyan">👥</div>Empleados Cargados</div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="clearNomina()">🗑 Limpiar</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr id="nominaHead"><th>#</th><th>Nombre</th><th>Edad</th><th>Plan Actual</th><th>Cant. Familiares</th><th>Grupo Fam. Total</th></tr></thead>
+            <tbody id="nominaBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIGURAR ══ -->
+    <div class="page" id="page-configurar">
+
+      <!-- Grupos por plan OSDE -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-cyan">📋</div>Asignación de planes por grupo</div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="renderGrupos()">↺ Regenerar grupos</button>
+          <button class="btn btn-primary" style="font-size:12px" onclick="guardarGruposYCotizar()">💾 Guardar y Cotizar</button>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          Los empleados están agrupados por su plan OSDE actual. A cada grupo asignale la <strong>categoría GS</strong> y el <strong>plan médico GS</strong> equivalente.
+        </div>
+        <div id="gruposContainer">
+          <div class="empty-state"><div class="empty-icon">📋</div><div style="font-size:13px">Cargá una nómina primero para ver los grupos.</div></div>
+        </div>
+      </div>
+
+      <!-- Tabla individual editable -->
+      <div class="panel" id="panelIndividual" style="display:none">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-purple">✏️</div>Ajuste individual por empleado</div>
+          <div style="font-size:12px;color:var(--muted)">Valores por defecto del grupo — editá solo los que necesitás cambiar</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Empleado</th><th>Edad</th><th>GF</th><th>Plan OSDE</th>
+              <th>Categoría GS</th><th>Plan médico GS</th><th>🦷 Odonto</th><th>Precio titular</th>
+            </tr></thead>
+            <tbody id="individualBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="cotizar()">⚡ Cotizar</button>
+      </div>
+    </div>
+
+    <!-- ══ COTIZACION ══ -->
+    <div class="page" id="page-cotizacion">
+      <div id="cotizEmpty" class="empty-state">
+        <div class="empty-icon">💡</div>
+        <div style="font-size:14px">Cargá una nómina, configurá los planes y hacé click en <strong>⚡ Cotizar Todo</strong></div>
+      </div>
+      <div id="cotizResults" style="display:none">
+        <div id="r-planTotalsRow" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
+        <div class="stats-row">
+          <div class="stat-card" id="r-cardActual" style="display:none"><div class="stat-label">Plan Actual / mes</div><div class="stat-value" id="r-totalActual" style="color:#ff9f43">$0</div><div class="stat-sub">prepaga actual empresa</div></div>
+          <div class="stat-card"><div class="stat-label">Total GS / mes</div><div class="stat-value stat-accent" id="r-totalGS">$0</div><div class="stat-sub" id="r-labelGS">Grupo Salud</div></div>
+          <div class="stat-card"><div class="stat-label">Total OSDE / mes</div><div class="stat-value" id="r-totalOSDE" style="color:#b47aff">$0</div><div class="stat-sub" id="r-labelOSDE">—</div></div>
+          <div class="stat-card"><div class="stat-label">Ahorro vs Plan Actual</div><div class="stat-value" id="r-ahorroVsActual" style="color:#ff9f43">—</div><div class="stat-sub">GS vs prepaga actual / mes</div><div class="stat-sub" id="r-pctVsActual" style="color:#ff9f43;font-weight:700;font-size:13px;margin-top:4px"></div></div>
+          <div class="stat-card"><div class="stat-label">Ahorro vs OSDE</div><div class="stat-value stat-green" id="r-ahorro">$0</div><div class="stat-sub">GS vs OSDE / mes</div><div class="stat-sub" id="r-pctVsOSDE" style="color:#00c853;font-weight:700;font-size:13px;margin-top:4px"></div></div>
+          <div class="stat-card" id="r-cardAportes" style="display:none">
+            <div class="stat-label">Aportes y contrib.</div>
+            <div class="stat-value" id="r-totalAportes" style="color:#a8e6cf;font-size:18px">$0</div>
+            <div class="stat-sub">Cubierto por recibo de sueldo</div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span style="color:var(--muted)">Costo empresa</span>
+                <span style="color:#a8e6cf;font-weight:600" id="r-costoEmpresa">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px">
+                <span style="color:var(--muted)">Costo empleado</span>
+                <span style="color:#ffd3b6;font-weight:600" id="r-costoEmpleado">$0</span>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card"><div class="stat-label">Empleados</div><div class="stat-value stat-accent" id="r-emps">0</div><div class="stat-sub">en nómina</div></div>
+          <div class="stat-card"><div class="stat-label">Personas cubiertas</div><div class="stat-value stat-yellow" id="r-personas">0</div><div class="stat-sub">titular + familia</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="icon icon-green">💰</div>Detalle por Empleado</div>
+            <button class="btn btn-ghost" onclick="exportCSV()" style="font-size:12px">📊 CSV</button>
+            <button class="btn btn-success" onclick="exportXLSX()" style="font-size:12px">📥 Excel</button>
+            <button class="btn btn-ghost" onclick="exportGoogleSheets()" style="font-size:12px">🟢 Google Sheets</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr id="cotizHead"></tr></thead>
+              <tbody id="cotizBody"></tbody>
+              <tfoot id="cotizFoot"></tfoot>
+            </table>
+          </div>
+          <div class="result-total" id="result-total-row">
+            <div>
+              <div style="font-size:12px;color:var(--muted)">MEJOR OPCIÓN — TOTAL MENSUAL</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px" id="r-detallePlan">—</div>
+            </div>
+            <div class="total-value" id="r-totalFinal">$0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EXPORTAR ══ -->
+    <div class="page" id="page-exportar">
+      <div class="gamma-preview">
+        <div class="gamma-logo">γ Gamma</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px">Generá una presentación profesional lista para el cliente</div>
+        <div class="gamma-slides">
+          <div class="slide-thumb"><div class="slide-num">01</div><div class="slide-title-sm">Portada y presentación</div></div>
+          <div class="slide-thumb"><div class="slide-num">02</div><div class="slide-title-sm">Resumen de nómina</div></div>
+          <div class="slide-thumb"><div class="slide-num">03</div><div class="slide-title-sm">Comparativa GS vs OSDE</div></div>
+          <div class="slide-thumb"><div class="slide-num">04</div><div class="slide-title-sm">Detalle por empleado</div></div>
+          <div class="slide-thumb"><div class="slide-num">05</div><div class="slide-title-sm">Planes recomendados</div></div>
+          <div class="slide-thumb"><div class="slide-num">06</div><div class="slide-title-sm">Cobertura y beneficios</div></div>
+          <div class="slide-thumb"><div class="slide-num">07</div><div class="slide-title-sm">Inversión mensual total</div></div>
+          <div class="slide-thumb"><div class="slide-num">08</div><div class="slide-title-sm">Próximos pasos</div></div>
+        </div>
+        <button class="btn btn-success" style="font-size:15px;padding:14px 32px" onclick="generateGamma()">🚀 Generar Prompt para Gamma</button>
+      </div>
+      <div class="panel" id="gammaOutput" style="display:none;margin-top:20px">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-blue">📝</div>Prompt generado</div>
+          <button class="btn btn-ghost" onclick="copyGamma()" style="font-size:12px">📋 Copiar</button>
+        </div>
+        <textarea id="gammaText" style="width:100%;height:300px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:16px;resize:vertical;outline:none;line-height:1.7"></textarea>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">💡 Pegá este prompt en <strong>gamma.app</strong> → "AI Generate"</div>
+      </div>
+    </div>
+
+    <!-- ══ PRECIOS PDF ══ -->
+    <div class="page active" id="page-precios">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-yellow">📄</div>Cargar Tablas de Precios PDF</div>
+          <div class="tag">Actualización mensual</div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7">
+          Subí los PDFs de Grupo Salud cada mes. El sistema los lee automáticamente y actualiza todos los precios.
+        </div>
+
+        <div class="pdf-upload-grid">
+          <div class="pdf-slot" id="slot-tabla" onclick="document.getElementById('pdf-tabla').click()">
+            <div class="pdf-slot-icon" id="icon-tabla">📋</div>
+            <div class="pdf-slot-name">Tabla de Precios Principal</div>
+            <div class="pdf-slot-desc" id="desc-tabla">Valores Facturación Empresa<br>(Corporativo, Adherentes)</div>
+          </div>
+          <div class="pdf-slot" id="slot-corp65" onclick="document.getElementById('pdf-corp65').click()">
+            <div class="pdf-slot-icon" id="icon-corp65">👴</div>
+            <div class="pdf-slot-name">Corporativos Mayores 65</div>
+            <div class="pdf-slot-desc" id="desc-corp65">Valores Corporativo y Directo +65</div>
+          </div>
+          <div class="pdf-slot" id="slot-bajas" onclick="document.getElementById('pdf-bajas').click()">
+            <div class="pdf-slot-icon" id="icon-bajas">📉</div>
+            <div class="pdf-slot-name">Bajas Futuras</div>
+            <div class="pdf-slot-desc" id="desc-bajas">Valores empresa bajas futuras</div>
+          </div>
+          <div class="pdf-slot" id="slot-jubil" onclick="document.getElementById('pdf-jubil').click()">
+            <div class="pdf-slot-icon" id="icon-jubil">🏖️</div>
+            <div class="pdf-slot-name">Empleados Jubilables</div>
+            <div class="pdf-slot-desc" id="desc-jubil">Nuevos jubilados y odontología</div>
+          </div>
+          <div class="pdf-slot" id="slot-jubil65" onclick="document.getElementById('pdf-jubil65').click()">
+            <div class="pdf-slot-icon" id="icon-jubil65">👴🏖️</div>
+            <div class="pdf-slot-name">+65 Jubilables Empresa y Adh IV</div>
+            <div class="pdf-slot-desc" id="desc-jubil65">Jubilables empresa y adherentes IV<br>mayores 65</div>
+          </div>
+          <div class="pdf-slot loaded" id="slot-osde" onclick="document.getElementById('file-osde').click()" style="border-color:rgba(255,159,67,0.4)">
+            <div class="pdf-slot-icon" id="icon-osde">✅</div>
+            <div class="pdf-slot-name" style="color:var(--warning)">Precios OSDE</div>
+            <div class="pdf-slot-desc" id="desc-osde">✓ 5 planes OSDE cargados (12/1969)</div>
+          </div>
+        </div>
+        <input type="file" id="pdf-tabla" accept=".pdf" style="display:none" onchange="loadPDF('tabla',this)">
+        <input type="file" id="pdf-corp65" accept=".pdf" style="display:none" onchange="loadPDF('corp65',this)">
+        <input type="file" id="pdf-bajas" accept=".pdf" style="display:none" onchange="loadPDF('bajas',this)">
+        <input type="file" id="pdf-jubil" accept=".pdf" style="display:none" onchange="loadPDF('jubil',this)">
+        <input type="file" id="pdf-jubil65" accept=".pdf" style="display:none" onchange="loadPDF('jubil65',this)">
+        <input type="file" id="file-osde" accept=".xlsx,.xls" style="display:none" onchange="loadOSDEExcel(this)">
+
+        <div id="pdfLog" style="margin-top: 16px; background: var(--surface2); border-radius: 10px; padding: 16px; font-size: 12px; font-family: monospace; color: var(--muted); min-height: 60px; display: block; max-height: 200px; overflow-y: auto; line-height: 1.8;"><span style="color:var(--muted)">[10:20:09]</span> 📊 <strong>Hoja1.xlsx</strong> — leyendo precios OSDE...<br><span style="color:var(--muted)">[10:20:09]</span>   OSDE <strong>210</strong> (12/1969) — Neo: $145.458 · Joven: $218.230 · Mayor: $299.661<br><span style="color:var(--muted)">[10:20:09]</span>   OSDE <strong>310</strong> (12/1969) — Neo: $190.730 · Joven: $285.050 · Mayor: $388.642<br><span style="color:var(--muted)">[10:20:09]</span>   OSDE <strong>410</strong> (12/1969) — Neo: $253.970 · Joven: $377.350 · Mayor: $531.549<br><span style="color:var(--muted)">[10:20:09]</span>   OSDE <strong>450</strong> (12/1969) — Neo: $384.379 · Joven: $574.754 · Mayor: $869.543<br><span style="color:var(--muted)">[10:20:09]</span>   OSDE <strong>510</strong> (12/1969) — Neo: $628.959 · Joven: $952.129 · Mayor: $1.379.571<br></div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="applyLoadedPrices()">💾 Aplicar precios cargados</button>
+          <button class="btn btn-warning" onclick="restaurarPrecios()">↩ Restaurar precios</button>
+          <button class="btn btn-success" onclick="guardarCotizadorHTML()" style="margin-left:8px">⬇️ Descargar cotizador actualizado</button>
+          <span id="pdfStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+
+      <!-- MANUAL PRICE ENTRY -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-green">✏️</div>Carga Manual de Precios</div>
+          <div class="tag">Alternativa al PDF</div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7">
+          Ingresá los precios directamente desde la tabla del PDF. Usá punto para miles y coma para decimales (ej: 174.448,55) o sin separadores (ej: 174448.55).
+        </div>
+
+        <!-- Tab selector -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px" id="manualTabBtns">
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('corp_directo',this)">Directo</button>
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('corp_obligatorio',this)">Corporativo</button>
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('adh_i_iii',this)">Adh. I y III</button>
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('adh_ii',this)">Adh. II</button>
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('jubilables',this)">Jubilables</button>
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('bajas_futuras',this)">Bajas Futuras</button>
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('mayores_65',this)">Corporativo Mayores de 65</button>
+          <button class="btn" style="font-size: 11px; padding: 6px 12px; background: var(--surface2);" onclick="showManualTab('jubilables_65',this)">+65 Jubilables Empresa y Adh IV</button>
+          <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px; border-color: var(--warning); color: var(--warning);" onclick="showManualTab('osde',this)">🔵 OSDE</button>
+        </div>
+
+        <div id="manualTabContent"><div class="manual-section-title">Plan OSDE 210<span style="color:var(--muted);font-size:10px;margin-left:8px">12/1969</span></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Neo (hasta 27 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_210_neo_individual" placeholder="0" value="145.458" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_210_neo_matrimonio" placeholder="0" value="290.916" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_210_neo_hijo" placeholder="0" value="96.560" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_210_neo_hijos" placeholder="0" value="43.572" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_210_neo_acargo" placeholder="0" value="394.713" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Joven (28 a 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_210_joven_individual" placeholder="0" value="218.230" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_210_joven_matrimonio" placeholder="0" value="436.460" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_210_joven_hijo" placeholder="0" value="96.560" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_210_joven_hijos" placeholder="0" value="43.572" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_210_joven_acargo" placeholder="0" value="394.713" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Mayor (más de 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_210_mayor_individual" placeholder="0" value="299.661" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_210_mayor_matrimonio" placeholder="0" value="528.423" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_210_mayor_hijo" placeholder="0" value="96.560" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_210_mayor_hijos" placeholder="0" value="43.572" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_210_mayor_acargo" placeholder="0" value="394.713" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Jubilado</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_210_jubilado_individual" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_210_jubilado_matrimonio" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_210_jubilado_hijo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_210_jubilado_hijos" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_210_jubilado_acargo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div class="manual-section-title">Plan OSDE 310<span style="color:var(--muted);font-size:10px;margin-left:8px">12/1969</span></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Neo (hasta 27 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_310_neo_individual" placeholder="0" value="190.730" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_310_neo_matrimonio" placeholder="0" value="381.461" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_310_neo_hijo" placeholder="0" value="128.143" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_310_neo_hijos" placeholder="0" value="50.444" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_310_neo_acargo" placeholder="0" value="511.289" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Joven (28 a 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_310_joven_individual" placeholder="0" value="285.050" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_310_joven_matrimonio" placeholder="0" value="570.099" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_310_joven_hijo" placeholder="0" value="128.143" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_310_joven_hijos" placeholder="0" value="50.444" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_310_joven_acargo" placeholder="0" value="511.289" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Mayor (más de 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_310_mayor_individual" placeholder="0" value="388.642" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_310_mayor_matrimonio" placeholder="0" value="687.779" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_310_mayor_hijo" placeholder="0" value="128.143" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_310_mayor_hijos" placeholder="0" value="50.444" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_310_mayor_acargo" placeholder="0" value="511.289" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Jubilado</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_310_jubilado_individual" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_310_jubilado_matrimonio" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_310_jubilado_hijo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_310_jubilado_hijos" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_310_jubilado_acargo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div class="manual-section-title">Plan OSDE 410<span style="color:var(--muted);font-size:10px;margin-left:8px">12/1969</span></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Neo (hasta 27 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_410_neo_individual" placeholder="0" value="253.970" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_410_neo_matrimonio" placeholder="0" value="507.941" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_410_neo_hijo" placeholder="0" value="166.937" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_410_neo_hijos" placeholder="0" value="66.410" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_410_neo_acargo" placeholder="0" value="699.186" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Joven (28 a 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_410_joven_individual" placeholder="0" value="377.350" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_410_joven_matrimonio" placeholder="0" value="754.699" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_410_joven_hijo" placeholder="0" value="166.937" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_410_joven_hijos" placeholder="0" value="66.410" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_410_joven_acargo" placeholder="0" value="699.186" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Mayor (más de 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_410_mayor_individual" placeholder="0" value="531.549" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_410_mayor_matrimonio" placeholder="0" value="882.919" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_410_mayor_hijo" placeholder="0" value="166.937" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_410_mayor_hijos" placeholder="0" value="66.410" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_410_mayor_acargo" placeholder="0" value="699.186" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Jubilado</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_410_jubilado_individual" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_410_jubilado_matrimonio" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_410_jubilado_hijo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_410_jubilado_hijos" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_410_jubilado_acargo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div class="manual-section-title">Plan OSDE 450<span style="color:var(--muted);font-size:10px;margin-left:8px">12/1969</span></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Neo (hasta 27 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_450_neo_individual" placeholder="0" value="384.379" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_450_neo_matrimonio" placeholder="0" value="768.759" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_450_neo_hijo" placeholder="0" value="224.611" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_450_neo_hijos" placeholder="0" value="129.538" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_450_neo_acargo" placeholder="0" value="907.608" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Joven (28 a 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_450_joven_individual" placeholder="0" value="574.754" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_450_joven_matrimonio" placeholder="0" value="1.149.507" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_450_joven_hijo" placeholder="0" value="224.611" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_450_joven_hijos" placeholder="0" value="129.538" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_450_joven_acargo" placeholder="0" value="907.608" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Mayor (más de 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_450_mayor_individual" placeholder="0" value="869.543" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_450_mayor_matrimonio" placeholder="0" value="1.365.003" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_450_mayor_hijo" placeholder="0" value="224.611" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_450_mayor_hijos" placeholder="0" value="129.538" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_450_mayor_acargo" placeholder="0" value="907.608" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Jubilado</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_450_jubilado_individual" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_450_jubilado_matrimonio" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_450_jubilado_hijo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_450_jubilado_hijos" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_450_jubilado_acargo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div class="manual-section-title">Plan OSDE 510<span style="color:var(--muted);font-size:10px;margin-left:8px">12/1969</span></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Neo (hasta 27 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_510_neo_individual" placeholder="0" value="628.959" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_510_neo_matrimonio" placeholder="0" value="1.257.919" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_510_neo_hijo" placeholder="0" value="392.599" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_510_neo_hijos" placeholder="0" value="196.630" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_510_neo_acargo" placeholder="0" value="1.416.505" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Joven (28 a 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_510_joven_individual" placeholder="0" value="952.129" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_510_joven_matrimonio" placeholder="0" value="1.904.259" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_510_joven_hijo" placeholder="0" value="392.599" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_510_joven_hijos" placeholder="0" value="196.630" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_510_joven_acargo" placeholder="0" value="1.416.505" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Mayor (más de 35 años)</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_510_mayor_individual" placeholder="0" value="1.379.571" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_510_mayor_matrimonio" placeholder="0" value="2.253.717" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_510_mayor_hijo" placeholder="0" value="392.599" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_510_mayor_hijos" placeholder="0" value="196.630" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_510_mayor_acargo" placeholder="0" value="1.416.505" class="filled" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div><div style="font-size:10px;color:var(--muted);margin:8px 0 4px;font-weight:600">Jubilado</div>
+        <div class="manual-grid"><div class="manual-field">
+            <label>Individual</label>
+            <input type="text" id="osde_510_jubilado_individual" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Matrimonio</label>
+            <input type="text" id="osde_510_jubilado_matrimonio" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>1 Hijo</label>
+            <input type="text" id="osde_510_jubilado_hijo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>Hijos adicionales</label>
+            <input type="text" id="osde_510_jubilado_hijos" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div><div class="manual-field">
+            <label>A cargo</label>
+            <input type="text" id="osde_510_jubilado_acargo" placeholder="0" value="" class="" oninput="this.classList.toggle('filled',!!this.value.trim())">
+          </div></div></div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="applyManualPrices()">💾 Aplicar precios manuales</button>
+          <span id="manualStatus" style="font-size:12px;color:var(--success)"></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-cyan">📊</div>Precios Activos</div>
+        </div>
+        <div id="preciosActivos" style="font-size:12px;color:var(--muted)"><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Directo</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$174.449</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$176.057</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$188.074</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$207.485</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$231.547</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$309.765</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$406.369</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Corporativo</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4125</div>
+            <div class="price-chip-val">$146.808</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4126</div>
+            <div class="price-chip-val">$148.284</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4127</div>
+            <div class="price-chip-val">$159.302</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4128</div>
+            <div class="price-chip-val">$177.087</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4215</div>
+            <div class="price-chip-val">$198.980</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4405/28</div>
+            <div class="price-chip-val">$273.842</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4501/116</div>
+            <div class="price-chip-val">$375.131</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Adh. I y III</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$182.374</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$183.791</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$196.612</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$216.986</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$242.070</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$327.135</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$429.126</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Adh. II</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$320.031</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$358.068</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$428.435</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$578.061</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$674.417</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Jubilables</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$446.005</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$459.927</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$492.005</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$542.818</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$605.768</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$884.085</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$1.159.919</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Bajas Futuras</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$302.316</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$311.749</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$333.507</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$367.928</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$410.597</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$549.299</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$720.603</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Corporativo Mayores de 65</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4125</div>
+            <div class="price-chip-val">$194.153</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4126</div>
+            <div class="price-chip-val">$196.106</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4127</div>
+            <div class="price-chip-val">$210.677</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4128</div>
+            <div class="price-chip-val">$234.198</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$230.708</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$232.835</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$248.728</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$274.399</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4215</div>
+            <div class="price-chip-val">$263.151</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$306.221</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$409.664</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$537.423</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4405/28</div>
+            <div class="price-chip-val">$362.155</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4501/116</div>
+            <div class="price-chip-val">$496.111</div>
+          </div>
+      </div>
+    </div><div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">+65 Jubilables Empresa y Adh IV</div>
+      <div class="price-table-grid">
+        
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4135</div>
+            <div class="price-chip-val">$394.049</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4136</div>
+            <div class="price-chip-val">$406.347</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4137</div>
+            <div class="price-chip-val">$434.693</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4138</div>
+            <div class="price-chip-val">$479.587</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4225</div>
+            <div class="price-chip-val">$535.193</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4404/28</div>
+            <div class="price-chip-val">$723.267</div>
+          </div>
+          <div class="price-chip">
+            <div class="price-chip-label">Plan 4502/116</div>
+            <div class="price-chip-val">$948.811</div>
+          </div>
+      </div>
+    </div><div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"><div style="font-size:11px;color:var(--warning);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600">🔵 OSDE — Individual (titular)</div><div class="price-table-grid"><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 210</div>
+      <div class="price-chip-val" style="color:var(--warning)">$299.661</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 310</div>
+      <div class="price-chip-val" style="color:var(--warning)">$388.642</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 410</div>
+      <div class="price-chip-val" style="color:var(--warning)">$531.549</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 450</div>
+      <div class="price-chip-val" style="color:var(--warning)">$869.543</div>
+    </div><div class="price-chip" style="border-color:rgba(255,159,67,0.3)">
+      <div class="price-chip-label" style="color:var(--warning)">Plan 510</div>
+      <div class="price-chip-val" style="color:var(--warning)">$1.379.571</div>
+    </div></div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ PLANTILLA ══ -->
+    <div class="page" id="page-plantilla">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="icon icon-green">📥</div>Plantilla Excel de Nómina</div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7">
+          Enviá esta plantilla al cliente para que complete los datos de su personal.
+        </div>
+        <table style="margin-bottom:20px">
+          <thead><tr><th>A — Apellido y Nombre</th><th>B — Fecha Nacimiento</th><th>C — Cargo</th><th>D — Cant. Familiares (sin titular)</th><th>E — Plan Actual</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--muted);font-style:italic">García Juan</td><td style="color:var(--muted)">15/04/1985</td><td style="color:var(--muted)">Gerente</td><td style="color:var(--muted)">SI</td><td style="color:var(--muted)">38</td><td style="color:var(--muted)">2</td></tr>
+          </tbody>
+        </table>
+        <button class="btn btn-primary" onclick="downloadTemplate()">📥 Descargar Plantilla CSV</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /app -->
+
+<!-- MODAL agregar empleado -->
+<div class="modal-overlay" id="modal-addEmp">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-title">➕ Agregar Empleado</div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600">Datos personales</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nombre y Apellido</label><input class="form-input" id="m-nombre" placeholder="García Juan"></div>
+      <div class="form-group"><label class="form-label">DNI / CUIL</label><input class="form-input" id="m-dni" placeholder="20-12345678-9"></div>
+      <div class="form-group"><label class="form-label">Cargo</label><select class="form-input" id="m-cargo"><option>Empleado</option><option>Supervisor</option><option>Gerente</option><option>Director</option></select></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600">Edad y grupo familiar</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input class="form-input" id="m-fnac" type="date" onchange="calcEdadDesdeNac()"></div>
+      <div class="form-group"><label class="form-label">Edad</label><input class="form-input" id="m-edad" type="number" placeholder="35" min="18" max="80"></div>
+      <div class="form-group"><label class="form-label">Familiares <span style="color:var(--muted);font-size:10px">(sin titular)</span></label><input class="form-input" id="m-familiares" type="number" value="0" min="0" placeholder="0"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600">Plan actual y costos <span style="color:var(--muted);font-weight:400;font-size:10px">(opcional)</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="form-group"><label class="form-label">Plan actual</label><input class="form-input" id="m-planActual" placeholder="ej: OSDE 210"></div>
+      <div class="form-group"><label class="form-label">Monto actual $</label><input class="form-input" id="m-montoActual" type="number" placeholder="0" min="0"></div>
+      <div class="form-group"><label class="form-label">Aportes y contrib. $</label><input class="form-input" id="m-aportes" type="number" placeholder="0" min="0"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600">Pago <span style="color:var(--muted);font-weight:400;font-size:10px">(opcional)</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px">
+      <div class="form-group"><label class="form-label">¿Empresa paga diferencia?</label>
+        <select class="form-input" id="m-empresaPaga"><option value="0">No</option><option value="1">Sí</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addEmp')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addEmployee()">✓ Agregar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-gsheets">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">🟢 Abrir en Google Sheets</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7">
+      El archivo Excel se va a descargar. Para abrirlo en Google Sheets seguí estos pasos:
+    </p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+        <div style="font-size:13px">Hacé click en <strong>Descargar Excel</strong> — se guarda en tu carpeta de Descargas</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+        <div style="font-size:13px">Abrí <strong>Google Sheets</strong> → <strong>Archivo → Importar</strong> → seleccioná el archivo descargado</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+        <div style="font-size:13px">Elegí <strong>"Reemplazar hoja de cálculo"</strong> o <strong>"Insertar nuevas hojas"</strong> según prefieras</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:rgba(0,229,160,0.08);border-radius:10px;border:1px solid rgba(0,229,160,0.2)">
+        <div style="font-size:18px;flex-shrink:0">💡</div>
+        <div style="font-size:12px;color:var(--muted)">También podés arrastrar el archivo .xlsx directo a la ventana de Google Drive y abrirlo desde ahí con Google Sheets.</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('gsheets')">Cancelar</button>
+      <button class="btn btn-success" onclick="exportXLSX();closeModal('gsheets')">📥 Descargar Excel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  PRECIOS — cargados desde PDFs o defaults Feb 2026
+// ═══════════════════════════════════════════════════════════
+// Estructura: PRECIOS[categoria][plan_medico] = precio_base
+// Odonto separado: PRECIOS_ODO[categoria][plan_odo] = precio
+
+let PRECIOS = {};
+let PRECIOS_ODO = {};
+let preciosMes = 'Mar 2026';
+
+// Plans available per category — drives the selectors dynamically
+const PLANS_POR_CAT = {
+  corp_directo:    ['4135','4136','4137','4138','4225','4404_28','4502_116'],
+  corp_obligatorio:['4125','4126','4127','4128','4215','4405_28','4501_116'],
+  adh_i_iii:       ['4135','4136','4137','4138','4225','4404_28','4502_116'],
+  adh_ii:          ['4135','4136','4137','4138','4225'],
+  jubilables:      ['4135','4136','4137','4138','4225','4404_28','4502_116'],
+  bajas_futuras:   ['4135','4136','4137','4138','4225','4404_28','4502_116'],
+  mayores_65:      ['4135','4136','4137','4138','4225','4404_28','4502_116','4125','4126','4127','4128','4215','4405_28','4501_116'],
+  jubilables_65:   ['4135','4136','4137','4138','4225','4404_28','4502_116'],
+};
+
+function getPlansForCat(cat) {
+  return PLANS_POR_CAT[cat] || PLANS_POR_CAT['corp_directo'];
+}
+
+// ── Backup para restaurar precios anteriores ──
+let PRECIOS_BACKUP = null;
+function savePreciosBackup() {
+  PRECIOS_BACKUP = {
+    PRECIOS: JSON.parse(JSON.stringify(PRECIOS)),
+    PRECIOS_ODO: JSON.parse(JSON.stringify(PRECIOS_ODO)),
+    PRECIOS_OSDE: JSON.parse(JSON.stringify(PRECIOS_OSDE)),
+    PRECIOS_BAJAS_EDAD: JSON.parse(JSON.stringify(PRECIOS_BAJAS_EDAD)),
+    PRECIOS_BAJAS_ODO_EDAD: JSON.parse(JSON.stringify(PRECIOS_BAJAS_ODO_EDAD)),
+    preciosMes,
+  };
+}
+function restaurarPrecios() {
+  if (!PRECIOS_BACKUP) { showToast('⚠ No hay precios anteriores guardados','warn'); return; }
+  PRECIOS               = PRECIOS_BACKUP.PRECIOS;
+  PRECIOS_ODO           = PRECIOS_BACKUP.PRECIOS_ODO;
+  PRECIOS_OSDE          = PRECIOS_BACKUP.PRECIOS_OSDE;
+  PRECIOS_BAJAS_EDAD    = PRECIOS_BACKUP.PRECIOS_BAJAS_EDAD;
+  PRECIOS_BAJAS_ODO_EDAD= PRECIOS_BACKUP.PRECIOS_BAJAS_ODO_EDAD;
+  preciosMes            = PRECIOS_BACKUP.preciosMes;
+  PRECIOS_BACKUP = null;
+  document.getElementById('preciosBadge').textContent = 'Precios: ' + preciosMes;
+  renderPreciosActivos();
+  if (typeof currentManualTab !== 'undefined') renderManualTab(currentManualTab);
+  showToast('✓ Precios restaurados (' + preciosMes + ')','success');
+}
+function guardarCotizadorHTML() {
+  try {
+    const data = JSON.stringify({
+      PRECIOS, PRECIOS_ODO, PRECIOS_BAJAS_EDAD, PRECIOS_BAJAS_ODO_EDAD, PRECIOS_OSDE, preciosMes
+    });
+
+    // Obtener el HTML fuente via outerHTML y reemplazar el tag JSON directamente en el string
+    let htmlStr = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+    // Reemplazar el contenido del tag JSON en el string HTML
+    htmlStr = htmlStr.replace(
+      /<script type="text\/plain" id="gs-precios-data">[\s\S]*?<\/script>/,
+      `<script type="text/plain" id="gs-precios-data">{"PRECIOS":{"corp_directo":{"4135":174448.55,"4136":176056.54,"4137":188074.2,"4138":207485.19,"4225":231547.2,"4404_28":309764.72,"4502_116":406369.23},"corp_obligatorio":{"4125":146807.64,"4126":148284.27,"4127":159302.15,"4128":177087.14,"4215":198979.92,"4405_28":273841.57,"4501_116":375131.07},"adh_i_iii":{"4135":182374.43,"4136":183791,"4137":196612.42,"4138":216986.04,"4225":242069.68,"4404_28":327135.44,"4502_116":429125.79},"adh_ii":{"4135":320030.97,"4136":358067.86,"4137":428435.49,"4138":578060.85,"4225":674417.35},"jubilables":{"4135":446004.98,"4136":459927.33,"4137":492005.11,"4138":542818.29,"4225":605768.19,"4404_28":884085.04,"4502_116":1159918.54},"bajas_futuras":{"4135":302315.62,"4136":311748.96,"4137":333507.26,"4138":367927.5,"4225":410597.34,"4404_28":549298.95,"4502_116":720603.37},"mayores_65":{"4125":194153.09,"4126":196105.95,"4127":210677.1,"4128":234197.74,"4135":230708.21,"4136":232834.77,"4137":248728.12,"4138":274399.16,"4215":263150.95,"4225":306221.17,"4404_28":409663.84,"4502_116":537423.31,"4405_28":362155.48,"4501_116":496110.84},"jubilables_65":{"4135":394049.26,"4136":406346.57,"4137":434693.38,"4138":479586.68,"4225":535193.28,"4404_28":723267.49,"4502_116":948811.24}},"PRECIOS_ODO":{"corp_directo":{"19":12347.28,"20":17369.32,"21":18743.37,"22":32328.08},"corp_obligatorio":{"19":12347.28,"20":17369.32,"21":18743.37,"22":32328.08},"adh_i_iii":{"19":14199.18,"20":20108.38,"21":21548.87,"22":37174.72},"adh_ii":{"19":10333.74,"20":20106.25,"21":21546.74,"22":37173.66},"jubilables":{"19":26800.27,"20":40440.46,"21":43647.15,"22":75279.12},"bajas_futuras":{"19":11485.64,"20":16157.4,"21":17436.3,"22":30085.41},"mayores_65":{"19":16329.28,"20":22970.93,"21":24788.11,"22":42753.89},"jubilables_65":{"19":17468.72,"20":24573.89,"21":26517.76,"22":45736.86}},"PRECIOS_BAJAS_EDAD":{"4135":{"m55":347662.96,"m65":399812.4},"4136":{"m55":358511.3,"m65":412288},"4137":{"m55":383533.34,"m65":441063.35},"4138":{"m55":423116.63,"m65":486584.13},"4225":{"m55":472186.95,"m65":543014.99},"4404_28":{"m55":631693.79,"m65":726447.86},"4502_116":{"m55":828693.87,"m65":952997.95}},"PRECIOS_BAJAS_ODO_EDAD":{"19":{"m55":13208.49,"m65":15189.76},"20":{"m55":18581.01,"m65":21368.16},"21":{"m55":20051.74,"m65":23059.5},"22":{"m55":34598.22,"m65":39787.95}},"PRECIOS_OSDE":{"210":{"individual":299661.2,"matrimonio":528423.39,"hijo":96559.66,"hijos_add":43571.62,"neo":{"individual":145458.01,"matrimonio":290916.04,"hijo":96559.66,"hijos":43571.62,"acargo":394712.9},"joven":{"individual":218230.11,"matrimonio":436460.23,"hijo":96559.66,"hijos":43571.62,"acargo":394712.9},"mayor":{"individual":299661.2,"matrimonio":528423.39,"hijo":96559.66,"hijos":43571.62,"acargo":394712.9},"jubilado":null,"fecha":"12/1969"},"310":{"individual":388642.42,"matrimonio":687778.69,"hijo":128143.4,"hijos_add":50443.72,"neo":{"individual":190730.38,"matrimonio":381460.79,"hijo":128143.4,"hijos":50443.72,"acargo":511289.08},"joven":{"individual":285049.63,"matrimonio":570099.3,"hijo":128143.4,"hijos":50443.72,"acargo":511289.08},"mayor":{"individual":388642.42,"matrimonio":687778.69,"hijo":128143.4,"hijos":50443.72,"acargo":511289.08},"jubilado":null,"fecha":"12/1969"},"410":{"individual":531549.36,"matrimonio":882918.53,"hijo":166937.12,"hijos_add":66410.2,"neo":{"individual":253970.45,"matrimonio":507940.93,"hijo":166937.12,"hijos":66410.2,"acargo":699186.07},"joven":{"individual":377349.54,"matrimonio":754699.14,"hijo":166937.12,"hijos":66410.2,"acargo":699186.07},"mayor":{"individual":531549.36,"matrimonio":882918.53,"hijo":166937.12,"hijos":66410.2,"acargo":699186.07},"jubilado":null,"fecha":"12/1969"},"450":{"individual":869542.85,"matrimonio":1365002.66,"hijo":224611.27,"hijos_add":129538,"neo":{"individual":384379.26,"matrimonio":768758.53,"hijo":224611.27,"hijos":129538,"acargo":907607.5},"joven":{"individual":574753.65,"matrimonio":1149507.32,"hijo":224611.27,"hijos":129538,"acargo":907607.5},"mayor":{"individual":869542.85,"matrimonio":1365002.66,"hijo":224611.27,"hijos":129538,"acargo":907607.5},"jubilado":null,"fecha":"12/1969"},"510":{"individual":1379571.15,"matrimonio":2253717.33,"hijo":392599.46,"hijos_add":196629.66,"neo":{"individual":628959.4,"matrimonio":1257918.84,"hijo":392599.46,"hijos":196629.66,"acargo":1416505.39},"joven":{"individual":952129.31,"matrimonio":1904258.63,"hijo":392599.46,"hijos":196629.66,"acargo":1416505.39},"mayor":{"individual":1379571.15,"matrimonio":2253717.33,"hijo":392599.46,"hijos":196629.66,"acargo":1416505.39},"jubilado":null,"fecha":"12/1969"}},"preciosMes":"Mar 2026"}</script>
+<script type="text/plain" id="gs-precios-data">{}</script>
+
+
+</body></html>
